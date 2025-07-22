@@ -17,9 +17,19 @@ jobs:
   test:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    #environment: ${{github.event_name == 'pull_request' && github.base_ref == 'prod' && 'prod' ||
+     # github.event_name == 'pull_request' && github.base_ref == 'preprod' && 'preprod' ||
+      #github.ref_name == 'prod' && 'prod' ||
+      #github.ref_name == 'preprod' && 'preprod' ||
+      #''}}
 
     env:
       AWS_REGION: eu-west-3
+      SECRET_KEY: ${{github.event_name == 'pull_request' && github.base_ref == 'prod' && secrets.SECRET_KEY_PROD ||
+        github.event_name == 'pull_request' && github.base_ref == 'preprod' && secrets.SECRET_KEY_PREPROD ||
+        github.ref_name == 'prod' && secrets.SECRET_KEY_PROD ||
+        github.ref_name == 'preprod' && secrets.SECRET_KEY_PREPROD ||
+        ''}}
 
     steps:
       - uses: actions/checkout@v4.1.6
@@ -30,8 +40,7 @@ jobs:
           distribution: 'corretto'
       - run: chmod +x gradlew
       - run: chmod +x .shell/publish_gen_to_maven_local.sh
-      - run: ./gradlew test
-
+      - run: ./gradlew test --stacktrace
       
 
   format:
